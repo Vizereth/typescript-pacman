@@ -2,9 +2,9 @@ import { EntityManager } from "../entities/entityManager.js";
 
 class Renderer {
   private static instance: Renderer | null;
-  entityManager;
+  private entityManager;
 
-  constructor() {
+  private constructor() {
     this.entityManager = EntityManager.getInstance();
   }
 
@@ -17,18 +17,26 @@ class Renderer {
   }
 
   render() {
-    Object.values(this.entityManager.getDynamicEntities()).forEach((entity) => {
-      entity.clearCanvas();
-      entity.update();
-    });
+    const clearedCanvases = new Set<HTMLCanvasElement>();
 
-    Object.values(this.entityManager.getStaticEntitiesNeedingRedraw()).forEach(
-      (entity) => {
-        entity.clearCanvas();
+    Object.values(this.entityManager.getDynamicEntities())
+      .flat()
+      .forEach((entity) => {
+        if (!clearedCanvases.has(entity.canvas)) {
+          entity.clearCanvas();
+          clearedCanvases.add(entity.canvas);
+        }
         entity.update();
-        entity.needsRedraw = false;
+      });
+
+    this.entityManager.getStaticEntitiesNeedingRedraw().forEach((entity) => {
+      if (!clearedCanvases.has(entity.canvas)) {
+        entity.clearCanvas();
+        clearedCanvases.add(entity.canvas);
       }
-    );
+      entity.update();
+      entity.needsRedraw = false;
+    });
   }
 }
 

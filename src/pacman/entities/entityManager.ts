@@ -1,10 +1,14 @@
-import { Entity } from "./entity.js";
+import { GHOSTS_CONFIG } from "../config/entities.js";
+
 import type { StaticEntitiesType, DynamicEntitiesType } from "../types.js";
+
+import { Entity } from "./entity.js";
 import { Map } from "../map/map.js";
 import { Food } from "../map/food.js";
 import { Pill } from "../map/pill.js";
 import { UI } from "../ui/ui.js";
 import { Pacman } from "./pacman.js";
+import { Ghost } from "./ghost.js";
 
 class EntityManager {
   private static instance: EntityManager | null = null;
@@ -12,9 +16,7 @@ class EntityManager {
   private staticEntities!: StaticEntitiesType;
   private dynamicEntities!: DynamicEntitiesType;
 
-  private constructor() {
-
-  }
+  private constructor() {}
 
   public static getInstance(): EntityManager {
     if (!EntityManager.instance) {
@@ -33,6 +35,12 @@ class EntityManager {
 
     this.dynamicEntities = {
       pacman: new Pacman(),
+      ghosts: [
+        new Ghost(GHOSTS_CONFIG.blinky.name, GHOSTS_CONFIG.blinky.color),
+        new Ghost(GHOSTS_CONFIG.pinky.name, GHOSTS_CONFIG.pinky.color),
+        new Ghost(GHOSTS_CONFIG.inky.name, GHOSTS_CONFIG.inky.color),
+        new Ghost(GHOSTS_CONFIG.clyde.name, GHOSTS_CONFIG.clyde.color),
+      ],
       pill: new Pill(),
     };
   }
@@ -43,7 +51,7 @@ class EntityManager {
     return this.dynamicEntities[key];
   }
 
-  public getDynamicEntities(): Record<string, Entity> {
+  public getDynamicEntities(): DynamicEntitiesType {
     return this.dynamicEntities;
   }
 
@@ -64,9 +72,15 @@ class EntityManager {
   }
 
   public initEntities(): void {
-    Object.values({ ...this.dynamicEntities, ...this.staticEntities }).forEach(
-      (entity) => {
-        if ("init" in entity && typeof entity.init === "function") {
+    Object.entries({ ...this.staticEntities, ...this.dynamicEntities }).forEach(
+      ([key, entity]) => {
+        if (Array.isArray(entity)) {
+          entity.forEach((item) => {
+            if ("init" in item && typeof item.init === "function") {
+              item.init();
+            }
+          });
+        } else if ("init" in entity && typeof entity.init === "function") {
           entity.init();
         }
       }
@@ -74,9 +88,15 @@ class EntityManager {
   }
 
   public resetEntities(): void {
-    Object.values({ ...this.dynamicEntities, ...this.staticEntities }).forEach(
-      (entity) => {
-        if ("reset" in entity && typeof entity.reset === "function") {
+    Object.entries({ ...this.staticEntities, ...this.dynamicEntities }).forEach(
+      ([key, entity]) => {
+        if (Array.isArray(entity)) {
+          entity.forEach((item) => {
+            if ("reset" in item && typeof item.reset === "function") {
+              item.reset();
+            }
+          });
+        } else if ("reset" in entity && typeof entity.reset === "function") {
           entity.reset();
         }
       }

@@ -9,6 +9,7 @@ const CANVAS_CONFIG = {
     pill: "pill-cvs",
     pacman: "pacman-cvs",
     ui: "ui-cvs",
+    ghosts: "ghosts-cvs",
   },
 };
 

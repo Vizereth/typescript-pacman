@@ -2,7 +2,6 @@
   import { onMount } from "svelte";
   import { Loop } from "../../pacman/game/loop.js";
   import { Controller } from "../../pacman/controller/controller.js";
-  import { Pacman } from "../../pacman/entities/pacman.js";
   import { GameState } from "../../pacman/game/state.js";
 
   onMount(() => {
@@ -23,6 +22,7 @@
     <canvas id="food-cvs"></canvas>
     <canvas id="pill-cvs"></canvas>
     <canvas id="pacman-cvs"></canvas>
+    <canvas id="ghosts-cvs"></canvas>
     <canvas id="ui-cvs"></canvas>
   </div>
 </main>

@@ -37,7 +37,7 @@ class Pacman extends Entity {
     this.y = 0;
     this.direction = { dx: 0, dy: 0 };
     this.nextDirection = null;
-    this.speed = this.tileSize / 6;
+    this.speed = this.tileSize / 8;
 
     this.mouthOpen = 1;
 
@@ -59,7 +59,7 @@ class Pacman extends Entity {
     const map = this.gameState.levelData.map;
 
     for (let y = 0; y < map.length; y++) {
-      let x = map[y].findIndex((tile: string) => tile === "PM");
+      let x = map[y].findIndex((tile: string) => tile === "PACMAN");
       if (x !== -1) {
         this.x = x * this.tileSize + this.tileSize / 2;
         this.y = y * this.tileSize + this.tileSize / 2;

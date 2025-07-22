@@ -1,3 +1,4 @@
+import type { Ghost } from "./entities/ghost.js";
 import type { Pacman } from "./entities/pacman.js";
 import type { Food } from "./map/food.js";
 import type { Map } from "./map/map.js";
@@ -11,12 +12,16 @@ export const TILE = {
   TR: "TR", // Top Right Corner
   BL: "BL", // Bottom Left Corner
   BR: "BR", // Bottom Right Corner
-  FD: "FD", // Food
-  PP: "PP", // Power Pill
-  TP: "TP", // Teleport
+  FD: "FOOD", // Food
+  PP: "PILL", // Power Pill
+  TP: "TELEPORT", // Teleport
   ES: "ES", // Empty space
   GL: "GL", // Ghost Lair Entrance
-  PM: "PM", // Pac-man
+  PM: "PACMAN", // Pac-man
+  BY: "BLINKY",
+  PY: "PINKY",
+  IY: "INKY",
+  CE: "CLYDE",
 } as const;
 
 type TileType = (typeof TILE)[keyof typeof TILE];
@@ -34,8 +39,9 @@ type StaticEntitiesType = {
 };
 
 type DynamicEntitiesType = {
-  pill: Pill;
   pacman: Pacman;
+  ghosts: Ghost[];
+  pill: Pill;
 };
 
 export type {
