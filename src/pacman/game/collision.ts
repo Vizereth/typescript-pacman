@@ -18,10 +18,7 @@ class Collision {
     return Collision.instance;
   }
 
-  public isWall(
-    x: number,
-    y: number
-  ): boolean {
+  public isWall(x: number, y: number, allowTileGL: boolean = false): boolean {
     const tileX = Math.floor(x / this.tileSize);
     const tileY = Math.floor(y / this.tileSize);
 
@@ -30,6 +27,10 @@ class Collision {
     const tile = this.gameState.levelData.map[tileY][tileX];
 
     const wallTiles = new Set(["WH", "WV", "TL", "TR", "BL", "BR", "GL"]);
+
+    if (tile === "GL" && allowTileGL) {
+      return false;
+    }
 
     if (wallTiles.has(tile)) {
       return true;
