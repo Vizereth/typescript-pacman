@@ -88,7 +88,7 @@ class Controller {
         break;
     }
 
-    this.pacman.changeDirection(newDirection.dx, newDirection.dy);
+    this.pacman.changeDirection(newDirection);
   }
 
   startGame() {

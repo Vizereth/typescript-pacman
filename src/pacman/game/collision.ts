@@ -18,13 +18,24 @@ class Collision {
     return Collision.instance;
   }
 
+  public getTile(x: number, y: number) {
+    return {
+      tileX: Math.floor(x / this.tileSize),
+      tileY: Math.floor(y / this.tileSize),
+    };
+  }
+
+  public getTileCenter(x: number, y: number) {
+    return {
+      centerX: Math.floor(x / this.tileSize) * this.tileSize + this.tileSize / 2,
+      centerY: Math.floor(y / this.tileSize) * this.tileSize + this.tileSize / 2,
+    };
+  }
+
   public isWall(x: number, y: number, allowTileGL: boolean = false): boolean {
-    const tileX = Math.floor(x / this.tileSize);
-    const tileY = Math.floor(y / this.tileSize);
+    if (!this.gameState.levelData.map[y]) return true;
 
-    if (!this.gameState.levelData.map[tileY]) return true;
-
-    const tile = this.gameState.levelData.map[tileY][tileX];
+    const tile = this.gameState.levelData.map[y][x];
 
     const wallTiles = new Set(["WH", "WV", "TL", "TR", "BL", "BR", "GL"]);
 

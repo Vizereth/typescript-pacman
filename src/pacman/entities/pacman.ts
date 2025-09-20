@@ -13,15 +13,17 @@ class Pacman extends Entity {
   public y: number;
   public direction: { dx: number; dy: number };
   public nextDirection: { dx: number; dy: number } | null;
+  private needsAligning: boolean;
+  public isTurning: boolean;
   private speed: number;
 
-  private mouthStates = [0, 1]; 
+  private mouthStates = [0, 1];
   private currentMouthFrameIndex = 0;
   private mouthFrameCounter = 0;
   private mouthFrameSkip = 12;
 
-  private mouthOpen: number; 
-  private mouthAngleMax = 0.25; 
+  private mouthOpen: number;
+  private mouthAngleMax = 0.25;
 
   private r: number;
   private color: string;
@@ -37,7 +39,9 @@ class Pacman extends Entity {
     this.y = 0;
     this.direction = { dx: 0, dy: 0 };
     this.nextDirection = null;
-    this.speed = this.tileSize / 8;
+    this.needsAligning = false;
+    this.isTurning = false;
+    this.speed = Math.round((this.tileSize / 8) * 10) / 10;
 
     this.mouthOpen = 1;
 
@@ -75,45 +79,25 @@ class Pacman extends Entity {
     this.updateMovement();
   }
 
-  private alignToGrid() {
-    if (this.direction.dx !== 0 && this.direction.dy === 0) {
-      this.y =
-        Math.floor(this.y / this.tileSize) * this.tileSize + this.tileSize / 2;
-    }
-
-    if (this.direction.dy !== 0 && this.direction.dx === 0) {
-      this.x =
-        Math.floor(this.x / this.tileSize) * this.tileSize + this.tileSize / 2;
-    }
-  }
-
-  public changeDirection(dx: number, dy: number) {
-    const newX = this.x + dx * this.speed;
-    const newY = this.y + dy * this.speed;
-
-    const tileX = this.x + dx * (this.speed + this.r);
-    const tileY = this.y + dy * (this.speed + this.r);
-
-    const hitWall = this.collision.isWall(tileX, tileY);
-
-    if (hitWall) return;
-
-    this.x = newX;
-    this.y = newY;
-    this.direction = { dx, dy };
-
-    this.alignToGrid();
-  }
-
   private updateMovement() {
-    const { newX, newY } = this.getNextPosition();
-
-    this.handleEatableCollision(newX, newY);
-
     if (this.willHitWall()) return;
 
+    if (this.isTurning) this.tryTurn();
+
+    const { newX, newY } = this.getNextPosition();
+
     this.x = newX;
     this.y = newY;
+
+    if (this.needsAligning) this.alignToAxis();
+
+    // const { centerX, centerY } = this.collision.getTileCenter(this.x, this.y);
+
+    // if (this.direction.dy !== 0) {
+    //   console.log(this.x === centerX, `X: ${this.x}, centerX: ${centerX}`);
+    // }
+
+    this.handleEatableCollision(newX, newY);
   }
 
   private getNextPosition() {
@@ -123,10 +107,110 @@ class Pacman extends Entity {
     };
   }
 
+  private snapToTileCenter() {
+    const { centerX, centerY } = this.collision.getTileCenter(this.x, this.y);
+
+    if (this.direction.dx !== 0) this.x = centerX;
+    if (this.direction.dy !== 0) this.y = centerY;
+  }
+
+  private alignToAxis(): void {
+    const { centerX, centerY } = this.collision.getTileCenter(this.x, this.y);
+
+    const tolerance = Math.floor(2 * this.speed);
+
+    if (this.direction.dx !== 0 && Math.abs(this.y - centerY) < tolerance)
+      this.y = centerY;
+    if (this.direction.dy !== 0 && Math.abs(this.x - centerX) < tolerance)
+      this.x = centerX;
+
+    this.needsAligning = false;
+  }
+
+  private isAtTileCenter(): boolean {
+    const { centerX, centerY } = this.collision.getTileCenter(this.x, this.y);
+
+    const tolerance = 3 * this.speed;
+
+    if (
+      (this.direction.dx !== 0 && Math.abs(this.x - centerX) <= tolerance) ||
+      (this.direction.dy !== 0 && Math.abs(this.y - centerY) <= tolerance)
+    ) {
+      return true;
+    }
+
+    return false;
+  }
+
+  private isNextTileWall(): boolean {
+    if (!this.nextDirection) return false;
+
+    const { tileX, tileY } = this.collision.getTile(this.x, this.y);
+
+    const nextTileX = tileX + this.nextDirection.dx;
+    const nextTileY = tileY + this.nextDirection.dy;
+
+    return this.collision.isWall(nextTileX, nextTileY);
+  }
+
+  private willChangeAxis(): boolean {
+    if (!this.nextDirection) return false;
+
+    return (
+      (this.direction.dx !== 0 && this.nextDirection.dy !== 0) ||
+      (this.direction.dy !== 0 && this.nextDirection.dx !== 0)
+    );
+  }
+
+  public changeDirection(dir: { dx: number; dy: number }) {
+    this.nextDirection = dir;
+
+    if (!this.willChangeAxis() && !this.isNextTileWall()) {
+      this.direction = this.nextDirection;
+      return;
+    }
+
+    if (!this.tryTurn()) this.tryBufferTurn();
+  }
+
+  private tryTurn(): boolean {
+    if (!this.nextDirection) return false;
+
+    if (this.isAtTileCenter() && !this.isNextTileWall()) {
+      this.snapToTileCenter();
+      this.direction = this.nextDirection;
+      this.nextDirection = null;
+      this.isTurning = false;
+      this.needsAligning = true;
+
+      return true;
+    }
+
+    return false;
+  }
+
+  private tryBufferTurn() {
+    if (!this.nextDirection) return false;
+
+    const { tileX, tileY } = this.collision.getTile(this.x, this.y);
+
+    const bufferTileX =
+      tileX +
+      (this.direction.dx !== 0 ? this.direction.dx : this.nextDirection.dx);
+    const bufferTileY =
+      tileY +
+      (this.direction.dy !== 0 ? this.direction.dy : this.nextDirection.dy);
+
+    if (!this.collision.isWall(bufferTileX, bufferTileY)) this.isTurning = true;
+  }
+
   private willHitWall(): boolean {
-    const lookaheadX = this.x + this.direction.dx * (this.speed + this.r);
-    const lookaheadY = this.y + this.direction.dy * (this.speed + this.r);
-    return this.collision.isWall(lookaheadX, lookaheadY);
+    const boundX = this.x + this.direction.dx * (this.speed + this.r);
+    const boundY = this.y + this.direction.dy * (this.speed + this.r);
+
+    const { tileX, tileY } = this.collision.getTile(boundX, boundY);
+
+    return this.collision.isWall(tileX, tileY);
   }
 
   private handleEatableCollision(x: number, y: number): void {

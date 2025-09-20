@@ -1,6 +1,6 @@
 const CANVAS_CONFIG = {
   tile: {
-    size: 16, // Size of each tile in pixels
+    size: 22, // Size of each tile in pixels
     extraHeightFactor: 6, // Extra height as a multiplier of tile size
   },
   canvasIds: {
