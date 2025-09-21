@@ -1,13 +1,16 @@
 import { CANVAS_CONFIG } from "../config/canvas.js";
+import { EntityManager } from "../entities/entityManager.js";
 import { GameState } from "./state.js";
 
 class Collision {
+  private entityManager: EntityManager;
   private static instance: Collision;
   private gameState: GameState;
   private tileSize: number;
 
   constructor() {
     this.gameState = GameState.getInstance();
+    this.entityManager = EntityManager.getInstance();
     this.tileSize = CANVAS_CONFIG.tile.size;
   }
 
@@ -27,8 +30,10 @@ class Collision {
 
   public getTileCenter(x: number, y: number) {
     return {
-      centerX: Math.floor(x / this.tileSize) * this.tileSize + this.tileSize / 2,
-      centerY: Math.floor(y / this.tileSize) * this.tileSize + this.tileSize / 2,
+      centerX:
+        Math.floor(x / this.tileSize) * this.tileSize + this.tileSize / 2,
+      centerY:
+        Math.floor(y / this.tileSize) * this.tileSize + this.tileSize / 2,
     };
   }
 
@@ -53,23 +58,14 @@ class Collision {
   public hasCollidedWithEatable(
     x: number,
     y: number
-  ): { type: "FOOD" | "PILL" | "NONE"; i: number; j: number } {
-    const tileX = Math.floor(x / this.tileSize);
-    const tileY = Math.floor(y / this.tileSize);
-    const map = this.gameState.levelData.map;
+  ) {
+    const { tileX, tileY } = this.getTile(x, y);
 
-    const tileRow = map[tileY];
-    if (!tileRow) return { type: "NONE", i: 0, j: 0 };
+    const foodInstance = this.entityManager.getStaticEntity("food");
 
-    const tile = tileRow[tileX];
-    const eatableMap: Record<string, "FOOD" | "PILL"> = {
-      FD: "FOOD",
-      PP: "PILL",
-    };
-
-    const type = eatableMap[tile] ?? "NONE";
-
-    return { type, i: tileY, j: tileX };
+    if (foodInstance.positions.has(`${tileY},${tileX}`)) {
+      foodInstance.eat(tileY, tileX);
+    }
   }
 }
 

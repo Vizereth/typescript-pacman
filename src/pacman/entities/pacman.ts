@@ -14,7 +14,7 @@ class Pacman extends Entity {
   public direction: { dx: number; dy: number };
   public nextDirection: { dx: number; dy: number } | null;
   private needsAligning: boolean;
-  public isTurning: boolean;
+  private isTurning: boolean;
   private speed: number;
 
   private mouthStates = [0, 1];
@@ -91,13 +91,7 @@ class Pacman extends Entity {
 
     if (this.needsAligning) this.alignToAxis();
 
-    // const { centerX, centerY } = this.collision.getTileCenter(this.x, this.y);
-
-    // if (this.direction.dy !== 0) {
-    //   console.log(this.x === centerX, `X: ${this.x}, centerX: ${centerX}`);
-    // }
-
-    this.handleEatableCollision(newX, newY);
+    this.collision.hasCollidedWithEatable(newX, newY);
   }
 
   private getNextPosition() {
@@ -211,21 +205,6 @@ class Pacman extends Entity {
     const { tileX, tileY } = this.collision.getTile(boundX, boundY);
 
     return this.collision.isWall(tileX, tileY);
-  }
-
-  private handleEatableCollision(x: number, y: number): void {
-    const { type, i, j } = this.collision.hasCollidedWithEatable(x, y);
-
-    switch (type) {
-      case "FOOD":
-        this.entityManager.getStaticEntity("food").eat(i, j);
-        break;
-      case "PILL":
-        this.entityManager.getDynamicEntity("pill").eat(i, j);
-        break;
-      default:
-        break;
-    }
   }
 
   private animateMouth() {

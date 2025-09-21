@@ -11,7 +11,6 @@ class GameState {
   score: number;
   currentLevel: number;
   levelData: LevelConfigType;
-  foodMap: Set<string>;
 
   private constructor() {
     this.entityManager = EntityManager.getInstance();
@@ -20,7 +19,6 @@ class GameState {
     this.score = 0;
     this.currentLevel = 1;
     this.levelData = LEVEL_CONFIGS[1];
-    this.foodMap = new Set();
   }
 
   static getInstance(): GameState {

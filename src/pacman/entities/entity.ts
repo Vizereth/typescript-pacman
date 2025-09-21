@@ -34,8 +34,13 @@ abstract class Entity {
     this.ctx = context;
   }
 
-  clearCanvas() {
-    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+  clearCanvas(
+    x: number = 0,
+    y: number = 0,
+    width: number = this.canvas.width,
+    height: number = this.canvas.height
+  ) {
+    this.ctx.clearRect(x, y, width, height);
   }
 
   requestRedraw(): void {
