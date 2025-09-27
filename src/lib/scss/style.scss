@@ -1,9 +1,13 @@
 @use "sass:math";
 
 @use "settings/null";
+@use "fonts.scss";
 
 body {
-  background-color: black;
+  background-color: rgb(16, 16, 16);
+
+  color: white;
+  font-size: 1rem;
 
   // Scroll is locked
   .lock & {
