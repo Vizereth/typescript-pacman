@@ -31,13 +31,13 @@ type LevelConfigType = {
   mapColor: string;
   buffTime: number;
 };
-
+// remove?
 type StaticEntitiesType = {
   food: Food;
   ui: UI;
   map: Map;
 };
-
+// remove?
 type DynamicEntitiesType = {
   pacman: Pacman;
   ghosts: Ghost[];

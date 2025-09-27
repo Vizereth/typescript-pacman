@@ -49,7 +49,11 @@ abstract class Entity {
     }
   }
 
-  abstract update(): void;
+  abstract init(): void;
+
+  abstract reset(): void;
+
+  abstract update(dt: number): void;
 }
 
 export { Entity };

@@ -27,7 +27,7 @@ class Loop {
 
     if (this.delta > this.interval) {
       this.then = this.now - (this.delta % this.interval);
-      this.renderer.render();
+      this.renderer.render(this.delta);
     }
   }
 
