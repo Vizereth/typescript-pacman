@@ -5,7 +5,7 @@ import { GameState } from "../game/state.js";
 class Pill extends Entity {
   private gameState: GameState;
   private pillColor: string;
-  private positions: { i: number; j: number }[];
+  public positions: { i: number; j: number }[];
   private animationCounter: number;
 
   constructor() {
@@ -17,7 +17,7 @@ class Pill extends Entity {
     this.animationCounter = 0;
   }
 
-  init() {
+  public init() {
     const map = this.gameState.levelData.map;
 
     for (let i = 0; i < map.length; i++) {
@@ -29,7 +29,7 @@ class Pill extends Entity {
     }
   }
 
-  update() {
+  public update() {
     const animationSpeed = 0.05;
     this.animationCounter += animationSpeed;
 

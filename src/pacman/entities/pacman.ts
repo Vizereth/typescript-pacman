@@ -17,6 +17,9 @@ class Pacman extends Entity {
   private isTurning: boolean;
   private speed: number;
 
+  private isBuffed: boolean;
+  private buffTime: number;
+
   private mouthStates = [0, 1];
   private currentMouthFrameIndex = 0;
   private mouthFrameCounter = 0;
@@ -42,6 +45,9 @@ class Pacman extends Entity {
     this.needsAligning = false;
     this.isTurning = false;
     this.speed = Math.round((this.tileSize / 8) * 10) / 10;
+
+    this.isBuffed = false;
+    this.buffTime = this.gameState.levelData.buffTime;
 
     this.mouthOpen = 1;
 
@@ -91,7 +97,7 @@ class Pacman extends Entity {
 
     if (this.needsAligning) this.alignToAxis();
 
-    this.collision.hasCollidedWithEatable(newX, newY);
+    this.handleCollisionWithEatable(newX, newY);
   }
 
   private getNextPosition() {
@@ -205,6 +211,30 @@ class Pacman extends Entity {
     const { tileX, tileY } = this.collision.getTile(boundX, boundY);
 
     return this.collision.isWall(tileX, tileY);
+  }
+
+  private handleCollisionWithEatable(x: number, y: number) {
+    const { tileX, tileY } = this.collision.getTile(this.x, this.y);
+    this.tryEatFood(tileX, tileY);
+    this.tryEatPill(tileX, tileY);
+  }
+
+  private tryEatFood(tileX: number, tileY: number) {
+    const food = this.entityManager.getStaticEntity("food");
+    if (food.positions.has(`${tileY},${tileX}`)) {
+      food.eat(tileY, tileX);
+    }
+  }
+
+  private tryEatPill(tileX: number, tileY: number) {
+    const pill = this.entityManager.getDynamicEntity("pill");
+    if (
+      !this.isBuffed &&
+      pill.positions.some((pos) => pos.i === tileY && pos.j === tileX)
+    ) {
+      pill.eat(tileY, tileX);
+      this.isBuffed = true;
+    }
   }
 
   private animateMouth() {
