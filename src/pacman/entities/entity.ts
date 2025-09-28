@@ -49,9 +49,9 @@ abstract class Entity {
     }
   }
 
-  abstract init(): void;
+  init(): void {}
 
-  abstract reset(): void;
+  reset(): void {}
 
   abstract update(dt: number): void;
 }

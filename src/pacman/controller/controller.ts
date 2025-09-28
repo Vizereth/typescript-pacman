@@ -12,7 +12,7 @@ class Controller {
     this.x1 = null;
     this.y1 = null;
     this.gameState = GameState.getInstance();
-    this.pacman = EntityManager.getInstance().getDynamicEntity('pacman');
+    this.pacman = EntityManager.getInstance().getPacman();
   }
 
   init() {

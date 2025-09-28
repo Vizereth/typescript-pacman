@@ -35,8 +35,8 @@ class GameState {
   public loadLevel() {
     this.levelData = this.getLevelConfig(this.currentLevel);
 
-    this.entityManager.resetEntities();
-    this.entityManager.initEntities();
+    this.entityManager.resetAll();
+    this.entityManager.initAll();
   }
 
   public nextLevel() {

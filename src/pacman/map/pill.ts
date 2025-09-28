@@ -17,7 +17,7 @@ class Pill extends Entity {
     this.animationCounter = 0;
   }
 
-  public init() {
+  public override init() {
     const map = this.gameState.levelData.map;
 
     for (let i = 0; i < map.length; i++) {
@@ -27,6 +27,11 @@ class Pill extends Entity {
         }
       }
     }
+  }
+
+  public override reset() {
+    this.positions = [];
+    this.animationCounter = 0;
   }
 
   public update() {

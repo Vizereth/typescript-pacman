@@ -55,14 +55,21 @@ class Pacman extends Entity {
     this.color = "rgb(255, 255, 0)";
   }
 
-  public init() {
+  public override init() {
     this.getSpawnCoords();
   }
 
-  public reset() {
+  public override reset() {
     this.mouthOpen = 1;
     this.direction = { dx: 0, dy: 0 };
     this.nextDirection = null;
+  }
+
+  public update(dt: number) {
+    if (!this.gameState.isRunning) return;
+
+    this.draw();
+    this.updateMovement(dt);
   }
 
   private getSpawnCoords() {
@@ -78,14 +85,7 @@ class Pacman extends Entity {
     }
   }
 
-  public update() {
-    if (!this.gameState.isRunning) return;
-
-    this.draw();
-    this.updateMovement();
-  }
-
-  private updateMovement() {
+  private updateMovement(dt: number) {
     if (this.willHitWall()) return;
 
     if (this.isTurning) this.tryTurn();
@@ -220,14 +220,14 @@ class Pacman extends Entity {
   }
 
   private tryEatFood(tileX: number, tileY: number) {
-    const food = this.entityManager.getStaticEntity("food");
+    const food = this.entityManager.getFood();
     if (food.positions.has(`${tileY},${tileX}`)) {
       food.eat(tileY, tileX);
     }
   }
 
   private tryEatPill(tileX: number, tileY: number) {
-    const pill = this.entityManager.getDynamicEntity("pill");
+    const pill = this.entityManager.getPill();
     if (
       !this.isBuffed &&
       pill.positions.some((pos) => pos.i === tileY && pos.j === tileX)

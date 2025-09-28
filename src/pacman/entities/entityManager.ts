@@ -48,16 +48,20 @@ class EntityManager {
     return Object.values(this.staticEntities).flat();
   }
 
-  public getDynamicEntity<K extends keyof typeof this.dynamicEntities>(
-    key: K
-  ): EntityArray {
-    return this.dynamicEntities[key];
+  public getFood(): Food {
+    return this.staticEntities.food[0] as Food;
   }
 
-  public getStaticEntity<K extends keyof typeof this.staticEntities>(
-    key: K
-  ): EntityArray {
-    return this.staticEntities[key];
+  public getPill(): Pill {
+    return this.dynamicEntities.pill[0] as Pill;
+  }
+
+  public getPacman(): Pacman {
+    return this.dynamicEntities.pacman[0] as Pacman;
+  }
+
+  public getGhosts(): Ghost[] {
+    return this.dynamicEntities.ghosts as Ghost[];
   }
 
   public initAll(): void {

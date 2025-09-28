@@ -1,10 +1,3 @@
-import type { Ghost } from "./entities/ghost.js";
-import type { Pacman } from "./entities/pacman.js";
-import type { Food } from "./map/food.js";
-import type { Map } from "./map/map.js";
-import type { Pill } from "./map/pill.js";
-import type { UI } from "./ui/ui.js";
-
 export const TILE = {
   WH: "WH", // Wall Horizontal
   WV: "WV", // Wall Vertical
@@ -31,22 +24,8 @@ type LevelConfigType = {
   mapColor: string;
   buffTime: number;
 };
-// remove?
-type StaticEntitiesType = {
-  food: Food;
-  ui: UI;
-  map: Map;
-};
-// remove?
-type DynamicEntitiesType = {
-  pacman: Pacman;
-  ghosts: Ghost[];
-  pill: Pill;
-};
 
 export type {
   TileType,
   LevelConfigType,
-  StaticEntitiesType,
-  DynamicEntitiesType,
 };

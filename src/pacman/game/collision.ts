@@ -58,8 +58,8 @@ class Collision {
   public hasCollidedWithEatable(x: number, y: number) {
     const { tileX, tileY } = this.getTile(x, y);
 
-    const food = this.entityManager.getStaticEntity("food");
-    const pill = this.entityManager.getDynamicEntity("pill");
+    const food = this.entityManager.getFood();
+    const pill = this.entityManager.getPill();
 
     if (food.positions.has(`${tileY},${tileX}`)) {
       food.eat(tileY, tileX);

@@ -38,9 +38,18 @@ class Ghost extends Entity {
     this.isFleeing = false;
   }
 
-  public init() {
+  public override init() {
     this.getSpawnCoords();
     this.getRandomDirection();
+  }
+
+  public override reset() {
+    this.direction = { dx: 0, dy: 0 };
+    this.speed = this.defaultSpeed;
+    this.color = this.defaultColor;
+    this.exited = false;
+    this.isScared = false;
+    this.isFleeing = false;
   }
 
   public update() {
@@ -52,15 +61,6 @@ class Ghost extends Entity {
 
     this.draw();
     this.updateMovement();
-  }
-
-  public reset() {
-    this.direction = { dx: 0, dy: 0 };
-    this.speed = this.defaultSpeed;
-    this.color = this.defaultColor;
-    this.exited = false;
-    this.isScared = false;
-    this.isFleeing = false;
   }
 
   private goToLairExit() {

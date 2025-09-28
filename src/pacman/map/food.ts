@@ -6,17 +6,15 @@ class Food extends Entity {
   private gameState: GameState;
   private color: string;
   public positions: Set<string>;
-  public tileSize: number;
 
   constructor() {
     super(CANVAS_CONFIG.canvasIds.food, false);
-    this.tileSize = CANVAS_CONFIG.tile.size;
     this.gameState = GameState.getInstance();
     this.color = "rgb(230, 230, 230)";
     this.positions = new Set();
   }
 
-  public init() {
+  public override init() {
     const map = this.gameState.levelData.map;
     for (let i = 0; i < map.length; i++) {
       for (let j = 0; j < map[i].length; j++) {
@@ -25,6 +23,10 @@ class Food extends Entity {
         }
       }
     }
+  }
+
+  public override reset() {
+    this.positions = new Set();
   }
 
   public update() {
