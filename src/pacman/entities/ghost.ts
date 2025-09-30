@@ -4,6 +4,9 @@ import { GameState } from "../game/state.js";
 import { Entity } from "./entity.js";
 
 class Ghost extends Entity {
+  // -------------------------
+  // 1. Properties
+  // -------------------------
   private gameState: GameState;
   private collision: Collision;
   private direction: { dx: number; dy: number };
@@ -15,11 +18,12 @@ class Ghost extends Entity {
   public y: number;
   private defaultSpeed: number;
   private speed: number;
-  private exited: boolean;
-  private pathToExit: { dx: number; dy: number }[] = [];
   private isScared: boolean;
   private isFleeing: boolean;
 
+  // -------------------------
+  // 2. Constructor
+  // -------------------------
   constructor(name: string, color: string) {
     super(CANVAS_CONFIG.canvasIds.ghosts, true);
 
@@ -32,12 +36,14 @@ class Ghost extends Entity {
     this.x = 0;
     this.y = 0;
     this.defaultSpeed = this.tileSize / 16;
-    this.speed = this.tileSize / 16;
-    this.exited = false;
+    this.speed = this.defaultSpeed;
     this.isScared = false;
     this.isFleeing = false;
   }
 
+  // -------------------------
+  // 3. Lifecycle
+  // -------------------------
   public override init() {
     this.getSpawnCoords();
     this.getRandomDirection();
@@ -47,235 +53,43 @@ class Ghost extends Entity {
     this.direction = { dx: 0, dy: 0 };
     this.speed = this.defaultSpeed;
     this.color = this.defaultColor;
-    this.exited = false;
     this.isScared = false;
     this.isFleeing = false;
+    this.getSpawnCoords();
   }
 
+  // -------------------------
+  // 4. Update loop
+  // -------------------------
   public update() {
     if (!this.gameState.isRunning) return;
 
-    if (!this.exited) {
-      this.goToLairExit();
+    // Change direction only when at tile center and about to hit wall
+    if (this.isAtTileCenter() && this.willHitWall()) {
+      this.snapToCenter();
+      this.getRandomDirection();
     }
 
-    this.draw();
-    this.updateMovement();
-  }
-
-  private goToLairExit() {
-    if (this.pathToExit.length === 0) {
-      this.pathToExit = this.findPathToExit();
-    }
-
-    if (this.pathToExit.length > 0) {
-      const move = this.pathToExit[0];
-      const tileCenterX =
-        Math.floor(this.x / this.tileSize) * this.tileSize + this.tileSize / 2;
-      const tileCenterY =
-        Math.floor(this.y / this.tileSize) * this.tileSize + this.tileSize / 2;
-
-      const closeToCenter =
-        Math.abs(this.x - tileCenterX) < 1 &&
-        Math.abs(this.y - tileCenterY) < 1;
-      if (closeToCenter) {
-        this.alignToGrid();
-        this.pathToExit.shift();
-        if (move) {
-          this.changeDirection(move.dx, move.dy);
-        }
-      }
-
+    // Move if we have a valid direction and no wall ahead
+    if (
+      (this.direction.dx !== 0 || this.direction.dy !== 0) &&
+      !this.willHitWall()
+    ) {
       const { newX, newY } = this.getNextPosition();
       this.x = newX;
       this.y = newY;
-
-      const currentTile =
-        this.gameState.levelData.map[Math.floor(this.y / this.tileSize)][
-          Math.floor(this.x / this.tileSize)
-        ];
-      if (currentTile === "ES") {
-        this.exited = true;
-        this.direction = { dx: 0, dy: 0 };
-      }
-
-      this.draw();
-      return;
     }
+
+    this.draw();
   }
 
-  private findLairExitTile(): { x: number; y: number } | null {
-    const map = this.gameState.levelData.map;
-
-    for (let y = 0; y < map.length; y++) {
-      for (let x = 0; x < map[y].length; x++) {
-        if (map[y][x] !== "GL") continue;
-
-        const neighbors = [
-          [x + 1, y],
-          [x - 1, y],
-          [x, y + 1],
-          [x, y - 1],
-        ];
-
-        for (const [nx, ny] of neighbors) {
-          if (!map[ny] || !map[ny][nx]) continue;
-          if (map[ny][nx] === "ES") {
-            return { x: nx, y: ny };
-          }
-        }
-      }
-    }
-
-    return null;
-  }
-
-  private findPathToExit(): { dx: number; dy: number }[] {
-    const map = this.gameState.levelData.map;
-    const tileSize = this.tileSize;
-
-    const startX = Math.floor(this.x / tileSize);
-    const startY = Math.floor(this.y / tileSize);
-    const start = { x: startX, y: startY };
-
-    const exit = this.findLairExitTile();
-    if (!exit) return [];
-
-    const visited = new Set<string>();
-    const queue: Array<{
-      x: number;
-      y: number;
-      path: { dx: number; dy: number }[];
-    }> = [{ x: start.x, y: start.y, path: [] }];
-
-    const directions = [
-      { dx: 0, dy: -1 }, // up
-      { dx: 0, dy: 1 }, // down
-      { dx: -1, dy: 0 }, // left
-      { dx: 1, dy: 0 }, // right
-    ];
-
-    while (queue.length > 0) {
-      const { x, y, path } = queue.shift()!;
-      const key = `${x},${y}`;
-      if (visited.has(key)) continue;
-      visited.add(key);
-
-      if (x === exit.x && y === exit.y) {
-        return path;
-      }
-
-      for (const dir of directions) {
-        const nx = x + dir.dx;
-        const ny = y + dir.dy;
-
-        if (!map[ny] || !map[ny][nx]) continue;
-
-        const px = nx * tileSize + tileSize / 2;
-        const py = ny * tileSize + tileSize / 2;
-
-        const canWalk = !this.collision.isWall(px, py, true); // allow GL during exit phase
-        if (!canWalk) continue;
-
-        queue.push({
-          x: nx,
-          y: ny,
-          path: [...path, dir],
-        });
-      }
-    }
-
-    return [];
-  }
-
-  private getSpawnCoords() {
-    const map = this.gameState.levelData.map;
-
-    for (let y = 0; y < map.length; y++) {
-      let x = map[y].findIndex((tile: string) => tile === this.name);
-      if (x !== -1) {
-        this.x = x * this.tileSize + this.tileSize / 2;
-        this.y = y * this.tileSize + this.tileSize / 2;
-        return;
-      }
-    }
-  }
-
-  private alignToGrid() {
-    if (this.direction.dx !== 0 && this.direction.dy === 0) {
-      this.y =
-        Math.floor(this.y / this.tileSize) * this.tileSize + this.tileSize / 2;
-    }
-
-    if (this.direction.dy !== 0 && this.direction.dx === 0) {
-      this.x =
-        Math.floor(this.x / this.tileSize) * this.tileSize + this.tileSize / 2;
-    }
-  }
-
-  public changeDirection(dx: number, dy: number) {
-    const newX = this.x + dx * this.speed;
-    const newY = this.y + dy * this.speed;
-
-    const tileX = this.x + dx * (this.speed + this.tileSize / 2);
-    const tileY = this.y + dy * (this.speed + this.tileSize / 2);
-
-    const hitWall = this.collision.isWall(tileX, tileY);
-
-    if (hitWall) return;
-
-    this.x = newX;
-    this.y = newY;
-    this.direction = { dx, dy };
-
-    this.alignToGrid();
-  }
-
-  public getRandomDirection(): void {
-    const directions = [
-      { dx: 1, dy: 0 }, // RIGHT
-      { dx: -1, dy: 0 }, // LEFT
-      { dx: 0, dy: -1 }, // UP
-      { dx: 0, dy: 1 }, // DOWN
-    ];
-
-    for (let i = directions.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [directions[i], directions[j]] = [directions[j], directions[i]];
-    }
-
-    for (const dir of directions) {
-      const tileX = this.x + dir.dx * (this.tileSize / 2 + this.speed);
-      const tileY = this.y + dir.dy * (this.tileSize / 2 + this.speed);
-
-      if (!this.collision.isWall(tileX, tileY)) {
-        this.direction = dir;
-        return;
-      }
-    }
-
-    this.direction = { dx: 0, dy: 0 };
-  }
-
-  private getDirectionLabel(): "LEFT" | "RIGHT" | "UP" | "DOWN" {
-    const { dx, dy } = this.direction;
-    if (dx === 1) return "RIGHT";
-    if (dx === -1) return "LEFT";
-    if (dy === -1) return "UP";
-    if (dy === 1) return "DOWN";
-    return "RIGHT";
-  }
-
-  private updateMovement() {
-    const { newX, newY } = this.getNextPosition();
-
-    if (this.willHitWall()) {
-      this.getRandomDirection();
-      return;
-    }
-
-    this.x = newX;
-    this.y = newY;
+  private isAtTileCenter(): boolean {
+    const { centerX, centerY } = this.collision.getTileCenter(this.x, this.y);
+    const tolerance = this.speed * 2;
+    return (
+      Math.abs(this.x - centerX) <= tolerance &&
+      Math.abs(this.y - centerY) <= tolerance
+    );
   }
 
   private getNextPosition() {
@@ -285,12 +99,113 @@ class Ghost extends Entity {
     };
   }
 
+  private snapToCenter() {
+    const { centerX, centerY } = this.collision.getTileCenter(this.x, this.y);
+
+    if (this.direction.dx != 0) this.x = centerX;
+    if (this.direction.dy != 0) this.y = centerY;
+  }
+
   private willHitWall(): boolean {
-    const lookaheadX =
+    const boundX =
       this.x + this.direction.dx * (this.speed + this.tileSize / 2);
-    const lookaheadY =
+    const boundY =
       this.y + this.direction.dy * (this.speed + this.tileSize / 2);
-    return this.collision.isWall(lookaheadX, lookaheadY, !this.exited);
+
+    const { tileX, tileY } = this.collision.getTile(boundX, boundY);
+
+    return this.collision.isWall(tileX, tileY);
+  }
+
+  public getRandomDirection() {
+    const directions = [
+      { dx: 1, dy: 0 },
+      { dx: -1, dy: 0 },
+      { dx: 0, dy: 1 },
+      { dx: 0, dy: -1 },
+    ];
+
+    // Separate directions by axis
+    const horizontalDirs = directions.filter((dir) => dir.dy === 0);
+    const verticalDirs = directions.filter((dir) => dir.dx === 0);
+
+    // Get current axis
+    const isCurrentlyHorizontal = this.direction.dy === 0;
+    const isCurrentlyVertical = this.direction.dx === 0;
+
+    // Prefer perpendicular directions (70% chance)
+    let preferredDirs;
+    if (Math.random() < 0.7) {
+      preferredDirs = isCurrentlyHorizontal ? verticalDirs : horizontalDirs;
+    } else {
+      preferredDirs = isCurrentlyHorizontal ? horizontalDirs : verticalDirs;
+    }
+
+    // Shuffle preferred directions
+    for (let i = preferredDirs.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [preferredDirs[i], preferredDirs[j]] = [
+        preferredDirs[j],
+        preferredDirs[i],
+      ];
+    }
+
+    // Try preferred directions first
+    for (const dir of preferredDirs) {
+      const tileX = Math.floor(
+        (this.x + dir.dx * (this.tileSize / 2 + this.speed)) / this.tileSize
+      );
+      const tileY = Math.floor(
+        (this.y + dir.dy * (this.tileSize / 2 + this.speed)) / this.tileSize
+      );
+      if (!this.collision.isWall(tileX, tileY)) {
+        this.direction = dir;
+        return;
+      }
+    }
+
+    // If no preferred direction works, try all directions
+    for (const dir of directions) {
+      const tileX = Math.floor(
+        (this.x + dir.dx * (this.tileSize / 2 + this.speed)) / this.tileSize
+      );
+      const tileY = Math.floor(
+        (this.y + dir.dy * (this.tileSize / 2 + this.speed)) / this.tileSize
+      );
+      if (!this.collision.isWall(tileX, tileY)) {
+        this.direction = dir;
+        return;
+      }
+    }
+
+    this.direction = { dx: 0, dy: 0 };
+  }
+
+  // -------------------------
+  // 5. Spawning
+  // -------------------------
+  private getSpawnCoords() {
+    const map = this.gameState.levelData.map;
+    for (let y = 0; y < map.length; y++) {
+      let x = map[y].findIndex((tile) => tile === this.name);
+      if (x !== -1) {
+        this.x = x * this.tileSize + this.tileSize / 2;
+        this.y = y * this.tileSize + this.tileSize / 2;
+        return;
+      }
+    }
+  }
+
+  // -------------------------
+  // 6. Rendering
+  // -------------------------
+  private getDirectionLabel(): "LEFT" | "RIGHT" | "UP" | "DOWN" {
+    const { dx, dy } = this.direction;
+    if (dx === 1) return "RIGHT";
+    if (dx === -1) return "LEFT";
+    if (dy === -1) return "UP";
+    if (dy === 1) return "DOWN";
+    return "RIGHT";
   }
 
   private draw(): void {
@@ -301,57 +216,83 @@ class Ghost extends Entity {
 
     const dir = this.getDirectionLabel();
 
-    const tl = left + s;
-    const base = top + s - 3;
-    const inc = s / 10;
-
-    const high = 3;
-    const low = -3;
+    // Self-contained animation timing
+    const now = Date.now();
+    const animationPhase = ((now % 1000) / 1000) * Math.PI * 2; // Slightly faster (800ms cycle)
+    const waveAmplitude = 2.5; // Even more pronounced - 6px amplitude!
 
     ctx.fillStyle = this.color;
     ctx.beginPath();
 
-    // Body top
-    ctx.moveTo(left, base);
-    ctx.quadraticCurveTo(left, top, left + s / 2, top);
-    ctx.quadraticCurveTo(left + s, top, left + s, base);
+    // Main ghost body - rounded top (semi-circle)
+    const centerX = left + s / 2;
+    const centerY = top + s / 2;
 
-    // Wavy bottom
-    ctx.quadraticCurveTo(tl - inc * 1, base + high, tl - inc * 2, base);
-    ctx.quadraticCurveTo(tl - inc * 3, base + low, tl - inc * 4, base);
-    ctx.quadraticCurveTo(tl - inc * 5, base + high, tl - inc * 6, base);
-    ctx.quadraticCurveTo(tl - inc * 7, base + low, tl - inc * 8, base);
-    ctx.quadraticCurveTo(tl - inc * 9, base + high, tl - inc * 10, base);
+    ctx.arc(centerX, centerY, s / 2, Math.PI, 0, false);
+
+    // Very pronounced sine wave bottom
+    const bottomBaseY = top + s;
+    const waveCount = 6; // More segments for smoother wave
+    const segmentWidth = s / waveCount;
+
+    // Start from right side
+    ctx.lineTo(left + s, bottomBaseY);
+
+    // Create smooth sine wave across bottom
+    for (let i = waveCount; i >= 0; i--) {
+      const x = left + i * segmentWidth;
+      // Continuous sine wave with high amplitude
+      const phase = (i / waveCount) * Math.PI * 4 + animationPhase * 4; // Double frequency
+      const wave = Math.sin(phase) * waveAmplitude;
+      ctx.lineTo(x, bottomBaseY + wave);
+    }
 
     ctx.closePath();
     ctx.fill();
 
-    // Eyes - whites
+    // Eyes with good spacing (20% from edges, 20% gap in middle)
+    ctx.fillStyle = "#FFFFFF";
     ctx.beginPath();
-    ctx.fillStyle = "#FFF";
-    ctx.arc(left + 6, top + 6, s / 6, 0, Math.PI * 2);
-    ctx.arc(left + s - 6, top + 6, s / 6, 0, Math.PI * 2);
+
+    // Left eye at 30% from left edge
+    ctx.arc(left + s * 0.3, top + s / 2, s / 6, 0, Math.PI * 2);
+    // Right eye at 70% from left edge (40% gap between eyes)
+    ctx.arc(left + s * 0.7, top + s / 2, s / 6, 0, Math.PI * 2);
+
     ctx.fill();
-    ctx.closePath();
 
-    // Eyes - pupils
-    const f = s / 12;
-    const offsets: Record<"LEFT" | "RIGHT" | "UP" | "DOWN", [number, number]> =
-      {
-        RIGHT: [f, 0],
-        LEFT: [-f, 0],
-        UP: [0, -f],
-        DOWN: [0, f],
-      };
-
-    const [dx, dy] = offsets[dir];
-
+    // Pupils - directional (same logic as before)
+    ctx.fillStyle = "#0000AA";
     ctx.beginPath();
-    ctx.fillStyle = this.color;
-    ctx.arc(left + 6 + dx, top + 6 + dy, s / 15, 0, Math.PI * 2);
-    ctx.arc(left + s - 6 + dx, top + 6 + dy, s / 15, 0, Math.PI * 2);
+
+    const pupilOffset = s / 10;
+    let leftPupilX = left + s * 0.3;
+    let leftPupilY = top + s / 2;
+    let rightPupilX = left + s * 0.7;
+    let rightPupilY = top + s / 2;
+
+    switch (dir) {
+      case "LEFT":
+        leftPupilX -= pupilOffset;
+        rightPupilX -= pupilOffset;
+        break;
+      case "RIGHT":
+        leftPupilX += pupilOffset;
+        rightPupilX += pupilOffset;
+        break;
+      case "UP":
+        leftPupilY -= pupilOffset;
+        rightPupilY -= pupilOffset;
+        break;
+      case "DOWN":
+        leftPupilY += pupilOffset;
+        rightPupilY += pupilOffset;
+        break;
+    }
+
+    ctx.arc(leftPupilX, leftPupilY, s / 12, 0, Math.PI * 2);
+    ctx.arc(rightPupilX, rightPupilY, s / 12, 0, Math.PI * 2);
     ctx.fill();
-    ctx.closePath();
   }
 }
 

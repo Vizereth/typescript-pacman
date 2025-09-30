@@ -18,7 +18,8 @@ class Pacman extends Entity {
   private speed: number;
 
   private isBuffed: boolean;
-  private buffTime: number;
+  private buffDuration: number;
+  private buffRemaining: number;
 
   private mouthStates = [0, 1];
   private currentMouthFrameIndex = 0;
@@ -47,7 +48,8 @@ class Pacman extends Entity {
     this.speed = Math.round((this.tileSize / 8) * 10) / 10;
 
     this.isBuffed = false;
-    this.buffTime = this.gameState.levelData.buffTime;
+    this.buffDuration = this.gameState.levelData.buffDuration;
+    this.buffRemaining = 0;
 
     this.mouthOpen = 1;
 
@@ -70,6 +72,8 @@ class Pacman extends Entity {
 
     this.draw();
     this.updateMovement(dt);
+
+    if (this.isBuffed) this.updateBuff(dt);
   }
 
   private getSpawnCoords() {
@@ -234,6 +238,17 @@ class Pacman extends Entity {
     ) {
       pill.eat(tileY, tileX);
       this.isBuffed = true;
+      this.buffRemaining = this.buffDuration;
+    }
+  }
+
+  public updateBuff(dt: number) {
+    if (this.buffRemaining > 0) {
+      this.buffRemaining -= dt;
+      if (this.buffRemaining <= 0) {
+        this.isBuffed = false;
+        this.buffRemaining = 0;
+      }
     }
   }
 

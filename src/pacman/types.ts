@@ -9,6 +9,7 @@ export const TILE = {
   PP: "PILL", // Power Pill
   TP: "TELEPORT", // Teleport
   ES: "ES", // Empty space
+  EX: "EX", // Ghost lair exit
   GL: "GL", // Ghost Lair Entrance
   PM: "PACMAN", // Pac-Man
   BY: "BLINKY",
@@ -22,7 +23,7 @@ type TileType = (typeof TILE)[keyof typeof TILE];
 type LevelConfigType = {
   map: TileType[][];
   mapColor: string;
-  buffTime: number;
+  buffDuration: number;
 };
 
 export type {

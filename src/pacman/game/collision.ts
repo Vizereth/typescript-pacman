@@ -37,16 +37,12 @@ class Collision {
     };
   }
 
-  public isWall(x: number, y: number, allowTileGL: boolean = false): boolean {
+  public isWall(x: number, y: number): boolean {
     if (!this.gameState.levelData.map[y]) return true;
 
     const tile = this.gameState.levelData.map[y][x];
 
-    const wallTiles = new Set(["WH", "WV", "TL", "TR", "BL", "BR", "GL"]);
-
-    if (tile === "GL" && allowTileGL) {
-      return false;
-    }
+    const wallTiles = new Set(["WH", "WV", "TL", "TR", "BL", "BR"]);
 
     if (wallTiles.has(tile)) {
       return true;
