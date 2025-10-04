@@ -21,13 +21,10 @@ class Pacman extends Entity {
   private buffDuration: number;
   private buffRemaining: number;
 
-  private mouthStates = [0, 1];
-  private currentMouthFrameIndex = 0;
-  private mouthFrameCounter = 0;
-  private mouthFrameSkip = 12;
-
-  private mouthOpen: number;
-  private mouthAngleMax = 0.25;
+  private mouthOpen: boolean = false;
+  private mouthFrameCounter: number = 0;
+  private readonly mouthFrameSkip: number = 9; // 1/6 frame rate
+  private readonly mouthAngle: number = Math.PI / 4; // 45 degrees for classic wedge
 
   private r: number;
   private color: string;
@@ -51,8 +48,6 @@ class Pacman extends Entity {
     this.buffDuration = this.gameState.levelData.buffDuration;
     this.buffRemaining = 0;
 
-    this.mouthOpen = 1;
-
     this.r = this.tileSize * 0.5;
     this.color = "rgb(255, 255, 0)";
   }
@@ -62,7 +57,7 @@ class Pacman extends Entity {
   }
 
   public override reset() {
-    this.mouthOpen = 1;
+    this.mouthOpen = false;
     this.direction = { dx: 0, dy: 0 };
     this.nextDirection = null;
   }
@@ -252,63 +247,49 @@ class Pacman extends Entity {
     }
   }
 
-  private animateMouth() {
-    this.mouthFrameCounter++;
-    if (this.mouthFrameCounter % this.mouthFrameSkip !== 0) return;
-
-    this.currentMouthFrameIndex = 1 - this.currentMouthFrameIndex;
-    this.mouthOpen = this.mouthStates[this.currentMouthFrameIndex];
-  }
-
-  private draw() {
-    let open = this.mouthOpen;
-    let cx = this.x;
-    let cy = this.y;
-    let r = this.r;
-
-    let a1 = open * this.mouthAngleMax * Math.PI;
-    let a2 = (2 - open * this.mouthAngleMax) * Math.PI;
-
-    let rotation = this.getRotation();
+  private draw(): void {
+    const cx = this.x;
+    const cy = this.y;
+    const r = this.r;
+    const rotation = this.getRotation();
 
     this.ctx.fillStyle = this.color;
     this.ctx.save();
     this.ctx.translate(cx, cy);
     this.ctx.rotate(rotation);
-    this.ctx.translate(-cx, -cy);
-    this.ctx.beginPath();
-    this.ctx.arc(cx, cy, r, a1, a2);
-    this.ctx.lineTo(cx, cy);
-    this.ctx.closePath();
-    this.ctx.fill();
+
+    if (this.mouthOpen) {
+      this.ctx.beginPath();
+      this.ctx.arc(0, 0, r, this.mouthAngle, 2 * Math.PI - this.mouthAngle);
+      this.ctx.lineTo(0, 0);
+      this.ctx.closePath();
+      this.ctx.fill();
+    } else {
+      this.ctx.beginPath();
+      this.ctx.arc(0, 0, r, 0, 2 * Math.PI);
+      this.ctx.fill();
+    }
+
     this.ctx.restore();
 
     this.animateMouth();
   }
 
-  private getRotation(): number {
-    if (this.direction.dx === -1) return Math.PI;
-    if (this.direction.dx === 1) return 0;
-    if (this.direction.dy === -1) return -Math.PI / 2;
-    if (this.direction.dy === 1) return Math.PI / 2;
-    return Math.PI;
+  private animateMouth(): void {
+    this.mouthFrameCounter++;
+    if (this.mouthFrameCounter < this.mouthFrameSkip) return;
+
+    this.mouthFrameCounter = 0;
+    this.mouthOpen = !this.mouthOpen;
   }
 
-  // private drawEye(rotation: number) {
-  //   let eyeAngle = Math.PI * 0.3;
-  //   let eyeX = this.r * 0.6 * Math.cos(eyeAngle);
-  //   let eyeY = this.r * 0.6 * Math.sin(eyeAngle);
-
-  //   this.ctx.save();
-  //   this.ctx.translate(this.x, this.y);
-  //   this.ctx.rotate(rotation);
-  //   this.ctx.translate(-this.x, -this.y);
-  //   this.ctx.beginPath();
-  //   this.ctx.arc(this.x + eyeX, this.y - eyeY, this.r * 0.15, 0, 2 * Math.PI);
-  //   this.ctx.fillStyle = "#000";
-  //   this.ctx.fill();
-  //   this.ctx.restore();
-  // }
+  private getRotation(): number {
+    if (this.direction.dx === -1) return Math.PI;
+    if (this.direction.dx === 1) return 0; 
+    if (this.direction.dy === -1) return -Math.PI / 2; 
+    if (this.direction.dy === 1) return Math.PI / 2; 
+    return 0; 
+  }
 }
 
 export { Pacman };
