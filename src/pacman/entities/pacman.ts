@@ -222,6 +222,7 @@ class Pacman extends Entity {
     const food = this.entityManager.getFood();
     if (food.positions.has(`${tileY},${tileX}`)) {
       food.eat(tileY, tileX);
+      this.gameState.updateScore("DOT");
     }
   }
 
@@ -232,6 +233,7 @@ class Pacman extends Entity {
       pill.positions.some((pos) => pos.i === tileY && pos.j === tileX)
     ) {
       pill.eat(tileY, tileX);
+      this.gameState.updateScore("POWER_PELLET");
       this.isBuffed = true;
       this.buffRemaining = this.buffDuration;
     }
@@ -285,10 +287,10 @@ class Pacman extends Entity {
 
   private getRotation(): number {
     if (this.direction.dx === -1) return Math.PI;
-    if (this.direction.dx === 1) return 0; 
-    if (this.direction.dy === -1) return -Math.PI / 2; 
-    if (this.direction.dy === 1) return Math.PI / 2; 
-    return 0; 
+    if (this.direction.dx === 1) return 0;
+    if (this.direction.dy === -1) return -Math.PI / 2;
+    if (this.direction.dy === 1) return Math.PI / 2;
+    return 0;
   }
 }
 
