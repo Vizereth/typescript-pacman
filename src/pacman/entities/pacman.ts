@@ -80,7 +80,7 @@ class Pacman extends Entity {
     const map = this.gameState.levelData.map;
 
     for (let y = 0; y < map.length; y++) {
-      let x = map[y].findIndex((tile: string) => tile === "PACMAN");
+      let x = map[y].findIndex((tile: string) => tile === "PM");
       if (x !== -1) {
         this.x = x * this.tileSize + this.tileSize / 2;
         this.y = y * this.tileSize + this.tileSize / 2;

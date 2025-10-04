@@ -22,7 +22,7 @@ class Pill extends Entity {
 
     for (let i = 0; i < map.length; i++) {
       for (let j = 0; j < map[i].length; j++) {
-        if (map[i][j] === "PILL") {
+        if (map[i][j] === "PP") {
           this.positions.push({ i, j });
         }
       }

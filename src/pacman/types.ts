@@ -1,24 +1,20 @@
-export const TILE = {
-  WH: "WH", // Wall Horizontal
-  WV: "WV", // Wall Vertical
-  TL: "TL", // Top Left Corner
-  TR: "TR", // Top Right Corner
-  BL: "BL", // Bottom Left Corner
-  BR: "BR", // Bottom Right Corner
-  FD: "FOOD", // Food
-  PP: "PILL", // Power Pill
-  TP: "TELEPORT", // Teleport
-  ES: "ES", // Empty space
-  EX: "EX", // Ghost lair exit
-  GL: "GL", // Ghost Lair Entrance
-  PM: "PACMAN", // Pac-Man
-  BY: "BLINKY",
-  PY: "PINKY",
-  IY: "INKY",
-  CE: "CLYDE",
-} as const;
-
-type TileType = (typeof TILE)[keyof typeof TILE];
+export type TileType =
+  | "WH" // Wall Horizontal
+  | "WV" // Wall Vertical
+  | "TL" // Top Left Corner
+  | "TR" // Top Right Corner
+  | "BL" // Bottom Left Corner
+  | "BR" // Bottom Right Corner
+  | "FD" // Food
+  | "PP" // Power Pill
+  | "TP" // Teleport
+  | "ES" // Empty Space
+  | "GL" // Ghost Lair
+  | "PM" // Pac-Man
+  | "BY" // Blinky (Red Ghost)
+  | "PY" // Pinky (Pink Ghost)
+  | "IY" // Inky (Cyan Ghost)
+  | "CE"; // Clyde (Orange Ghost)
 
 type LevelConfigType = {
   map: TileType[][];
@@ -26,7 +22,4 @@ type LevelConfigType = {
   buffDuration: number;
 };
 
-export type {
-  TileType,
-  LevelConfigType,
-};
+export type { LevelConfigType };
