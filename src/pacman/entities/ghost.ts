@@ -16,6 +16,7 @@ class Ghost extends Entity {
   public color: string;
   public x: number;
   public y: number;
+  public r: number;
   private defaultSpeed: number;
   private speed: number;
   private isScared: boolean;
@@ -35,6 +36,7 @@ class Ghost extends Entity {
     this.direction = { dx: 0, dy: 0 };
     this.x = 0;
     this.y = 0;
+    this.r = this.tileSize / 2;
     this.defaultSpeed = this.tileSize / 16;
     this.speed = this.defaultSpeed;
     this.isScared = false;
@@ -45,7 +47,6 @@ class Ghost extends Entity {
   // 3. Lifecycle
   // -------------------------
   public override init() {
-    this.getSpawnCoords();
     this.getRandomDirection();
   }
 
@@ -55,7 +56,6 @@ class Ghost extends Entity {
     this.color = this.defaultColor;
     this.isScared = false;
     this.isFleeing = false;
-    this.getSpawnCoords();
   }
 
   // -------------------------
@@ -64,13 +64,11 @@ class Ghost extends Entity {
   public update() {
     if (!this.gameState.isRunning) return;
 
-    // Change direction only when at tile center and about to hit wall
     if (this.isAtTileCenter() && this.willHitWall()) {
       this.snapToCenter();
       this.getRandomDirection();
     }
 
-    // Move if we have a valid direction and no wall ahead
     if (
       (this.direction.dx !== 0 || this.direction.dy !== 0) &&
       !this.willHitWall()
@@ -184,7 +182,7 @@ class Ghost extends Entity {
   // -------------------------
   // 5. Spawning
   // -------------------------
-  private getSpawnCoords() {
+  public spawn() {
     const map = this.gameState.levelData.map;
     for (let y = 0; y < map.length; y++) {
       let x = map[y].findIndex((tile) => tile === this.name);

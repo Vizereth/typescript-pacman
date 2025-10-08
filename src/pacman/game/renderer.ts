@@ -13,7 +13,7 @@ class Renderer {
     return Renderer.instance;
   }
 
-  public render(dt: number): void {
+  public render(dt?: number): void {
     const clearedCanvases = new Set<HTMLCanvasElement>();
 
     this.entityManager.getAllDynamic().forEach((entity) => {

@@ -1,8 +1,9 @@
 #TODO: 
 
-- Add easier corner turning
-- Tweak collision for food and pills
-- Make pacman's mouth animation skippy
+- Ghosts exit lair
+- Better spawn method
+- Smoother pacman turning
+- Speed independend of framerate
 
 
 # create-svelte

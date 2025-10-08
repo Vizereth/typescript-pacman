@@ -1,18 +1,15 @@
 import { EntityManager } from "../entities/entityManager.js";
-import { Pacman } from "../entities/pacman.js";
 import { GameState } from "../game/state.js";
 
 class Controller {
   private x1: number | null;
   private y1: number | null;
-  private pacman: Pacman;
   private gameState: GameState;
 
   constructor() {
     this.x1 = null;
     this.y1 = null;
     this.gameState = GameState.getInstance();
-    this.pacman = EntityManager.getInstance().getPacman();
   }
 
   init() {
@@ -28,8 +25,12 @@ class Controller {
     window.addEventListener("keydown", this.keyDown.bind(this));
   }
 
+  private getPacman() {
+    return EntityManager.getInstance().getPacman();
+  }
+
   touchCancel() {
-    this.x1 = this.y1 = null; 
+    this.x1 = this.y1 = null;
   }
 
   touchStart(event: TouchEvent) {
@@ -48,12 +49,13 @@ class Controller {
     const dx = Math.abs(x2 - this.x1);
     const dy = Math.abs(y2 - this.y1);
 
+    const pacman = this.getPacman();
+    if (!pacman) return;
+
     if (dx > dy) {
-      this.pacman.direction =
-        x2 > this.x1 ? { dx: 1, dy: 0 } : { dx: -1, dy: 0 };
+      pacman.direction = x2 > this.x1 ? { dx: 1, dy: 0 } : { dx: -1, dy: 0 };
     } else {
-      this.pacman.direction =
-        y2 > this.y1 ? { dx: 0, dy: 1 } : { dx: 0, dy: -1 };
+      pacman.direction = y2 > this.y1 ? { dx: 0, dy: 1 } : { dx: 0, dy: -1 };
     }
 
     this.x1 = this.y1 = null;
@@ -62,12 +64,15 @@ class Controller {
   keyDown(event: KeyboardEvent) {
     event.preventDefault();
 
-    if (event.key === "ENTER" && !this.gameState.isRunning) {
-      this.startGame();
+    if (event.key === "Enter" && !this.gameState.isRunning) {
+      this.gameState.startGame();
       return;
     }
 
     if (!this.gameState.isRunning) return;
+
+    const pacman = this.getPacman();
+    if (!pacman) return;
 
     let newDirection = { dx: 0, dy: 0 };
 
@@ -88,11 +93,7 @@ class Controller {
         break;
     }
 
-    this.pacman.changeDirection(newDirection);
-  }
-
-  startGame() {
-    this.gameState.startGame();
+    pacman.changeDirection(newDirection);
   }
 }
 

@@ -1,7 +1,8 @@
 import { Renderer } from "./renderer.js";
 
-class Loop {
+class GameLoop {
   renderer: Renderer;
+  private static instance: GameLoop;
   private fps: number;
   private now: number | null;
   private then: number;
@@ -17,6 +18,13 @@ class Loop {
     this.interval = 1000 / this.fps;
     this.delta = null;
     this.timer = null;
+  }
+
+  static getInstance(): GameLoop {
+    if (!GameLoop.instance) {
+      GameLoop.instance = new GameLoop();
+    }
+    return GameLoop.instance;
   }
 
   public loop() {
@@ -45,4 +53,4 @@ class Loop {
   }
 }
 
-export { Loop };
+export { GameLoop };

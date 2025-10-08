@@ -53,7 +53,7 @@ abstract class Entity {
 
   reset(): void {}
 
-  abstract update(dt: number): void;
+  abstract update(dt?: number): void;
 }
 
 export { Entity };

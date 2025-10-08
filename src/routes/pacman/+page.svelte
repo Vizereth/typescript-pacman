@@ -1,18 +1,14 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { Loop } from "../../pacman/game/loop.js";
   import { Controller } from "../../pacman/controller/controller.js";
   import { GameState } from "../../pacman/game/state.js";
 
   onMount(() => {
-    const game = GameState.getInstance();
-    game.startGame();
-
+    const gameState = GameState.getInstance();
+    gameState.loadGame();
+    
     const controller = new Controller();
     controller.init();
-
-    const loopInstance = new Loop();
-    loopInstance.start();
   });
 </script>
 

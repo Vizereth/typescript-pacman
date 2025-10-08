@@ -42,7 +42,7 @@ class Collision {
 
     const tile = this.gameState.levelData.map[y][x];
 
-    const wallTiles = new Set(["WH", "WV", "TL", "TR", "BL", "BR"]);
+    const wallTiles = new Set(["WH", "WV", "TL", "TR", "BL", "BR", "GL"]);
 
     if (wallTiles.has(tile)) {
       return true;

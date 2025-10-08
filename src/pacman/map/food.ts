@@ -5,12 +5,14 @@ import { GameState } from "../game/state.js";
 class Food extends Entity {
   private gameState: GameState;
   private color: string;
+  private r: number;
   public positions: Set<string>;
 
   constructor() {
     super(CANVAS_CONFIG.canvasIds.food, false);
     this.gameState = GameState.getInstance();
     this.color = "rgb(230, 230, 230)";
+    this.r = this.tileSize / 8;
     this.positions = new Set();
   }
 
@@ -49,7 +51,7 @@ class Food extends Entity {
     this.ctx.arc(
       tileSize * j + tileSize / 2,
       tileSize * i + tileSize / 2,
-      tileSize / 8,
+      this.r,
       0,
       Math.PI * 2
     );

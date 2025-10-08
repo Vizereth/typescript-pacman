@@ -71,6 +71,11 @@ class EntityManager {
   public resetAll(): void {
     [...this.getAllStatic(), ...this.getAllDynamic()].forEach((e) => e.reset());
   }
+
+  public spawnAll(): void {
+    this.getPacman().spawn();
+    this.getGhosts().forEach((g: Ghost) => g.spawn());
+  }
 }
 
 export { EntityManager };

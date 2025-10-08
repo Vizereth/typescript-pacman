@@ -3,6 +3,7 @@ import { Collision } from "../game/collision.js";
 import { GameState } from "../game/state.js";
 import { Entity } from "./entity.js";
 import { EntityManager } from "./entityManager.js";
+import { Ghost } from "./ghost.js";
 
 class Pacman extends Entity {
   private gameState: GameState;
@@ -23,8 +24,8 @@ class Pacman extends Entity {
 
   private mouthOpen: boolean = false;
   private mouthFrameCounter: number = 0;
-  private readonly mouthFrameSkip: number = 9; // 1/6 frame rate
-  private readonly mouthAngle: number = Math.PI / 4; // 45 degrees for classic wedge
+  private mouthFrameSkip: number = 9; // 1/6 frame rate
+  private mouthAngle: number = Math.PI / 4; // 45 degrees for classic wedge
 
   private r: number;
   private color: string;
@@ -48,15 +49,17 @@ class Pacman extends Entity {
     this.buffDuration = this.gameState.levelData.buffDuration;
     this.buffRemaining = 0;
 
-    this.r = this.tileSize * 0.5;
+    this.r = this.tileSize * 0.45;
     this.color = "rgb(255, 255, 0)";
   }
 
   public override init() {
-    this.getSpawnCoords();
+    this.spawn();
   }
 
   public override reset() {
+    this.x = 0;
+    this.y = 0;
     this.mouthOpen = false;
     this.direction = { dx: 0, dy: 0 };
     this.nextDirection = null;
@@ -68,16 +71,21 @@ class Pacman extends Entity {
     this.draw();
     this.updateMovement(dt);
 
+    if (this.hasCollidedWithGhost()) {
+      // this.isBuffed ? this.eatGhost() : this.loseLife();
+      this.gameState.loseLife();
+    }
+
     if (this.isBuffed) this.updateBuff(dt);
   }
 
-  private getSpawnCoords() {
+  public spawn() {
     const map = this.gameState.levelData.map;
 
     for (let y = 0; y < map.length; y++) {
       let x = map[y].findIndex((tile: string) => tile === "PM");
       if (x !== -1) {
-        this.x = x * this.tileSize + this.tileSize / 2;
+        this.x = x * this.tileSize + this.tileSize;
         this.y = y * this.tileSize + this.tileSize / 2;
         return;
       }
@@ -216,6 +224,23 @@ class Pacman extends Entity {
     const { tileX, tileY } = this.collision.getTile(this.x, this.y);
     this.tryEatFood(tileX, tileY);
     this.tryEatPill(tileX, tileY);
+  }
+
+  public hasCollidedWithGhost(): boolean {
+    const ghosts = this.entityManager.getGhosts();
+
+    for (const g of ghosts) {
+      const distance = Math.sqrt(
+        (this.x - g.x) ** 2 + (this.y - g.y) ** 2
+      );
+      const collisionDistance = this.r + g.r;
+      
+      if (distance < collisionDistance) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   private tryEatFood(tileX: number, tileY: number) {

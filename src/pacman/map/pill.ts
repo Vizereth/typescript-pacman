@@ -12,7 +12,7 @@ class Pill extends Entity {
     super(CANVAS_CONFIG.canvasIds.pill, true);
 
     this.gameState = GameState.getInstance();
-    this.pillColor = "rgb(250, 250, 0)";
+    this.pillColor = "#F0F4FF";
     this.positions = [];
     this.animationCounter = 0;
   }
@@ -50,7 +50,7 @@ class Pill extends Entity {
 
   private draw(i: number, j: number) {
     const baseSize = this.tileSize / 6;
-    const pulseSize = Math.sin(this.animationCounter) * (this.tileSize / 20);
+    const pulseSize = Math.sin(this.animationCounter * 3) * (this.tileSize / 15);
     const finalSize = baseSize + pulseSize;
 
     this.ctx.fillStyle = this.pillColor;
