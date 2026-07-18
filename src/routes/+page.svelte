@@ -1,411 +1,346 @@
 <script lang="ts">
-  import { onMount } from "svelte";
+  import GameCard from "$shared/ui/GameCard.svelte";
+  import { GameStatus, type GameStatusType } from "../shared/core/types.js";
 
-  interface GameRoute {
-    id: string;
-    path: string;
+  interface GameEntry {
     name: string;
-    color: string;
-    available: boolean;
+    route: string;
+    status: GameStatusType;
+    description: string;
+    frostType: "aurora" | "glacier" | "blizzard" | "boreal";
   }
 
-  const routes: GameRoute[] = [
+  const games: GameEntry[] = [
     {
-      id: "01",
-      path: "/games/pacman",
+      name: "SNAKE",
+      route: "/games/snake",
+      status: GameStatus.AVAILABLE,
+      description:
+        "Бесконечная навигация в ледяном лабиринте. Избегайте фантомов и собирайте осколки.",
+      frostType: "aurora",
+    },
+    {
+      name: "TETRIS",
+      route: "/games/tetris",
+      status: GameStatus.IN_DEVELOPMENT,
+      description:
+        "Геометрический спуск. Кристаллизация падающих фрагментов в единую структуру.",
+      frostType: "glacier",
+    },
+    {
+      name: "SIMON",
+      route: "/games/simon",
+      status: GameStatus.IN_DEVELOPMENT,
+      description:
+        "Резонанс памяти. Повторите затихающие звуковые сигналы полярной станции.",
+      frostType: "blizzard",
+    },
+    {
       name: "PAC-MAN",
-      color: "#ddaa44",
-      available: true,
-    },
-    { id: "02", path: "#", name: "SNAKE", color: "#44aa44", available: false },
-    { id: "03", path: "#", name: "TETRIS", color: "#aa4444", available: false },
-    { id: "04", path: "#", name: "PONG", color: "#aaaa44", available: false },
-    {
-      id: "05",
-      path: "#",
-      name: "BREAKOUT",
-      color: "#aa44aa",
-      available: false,
-    },
-    {
-      id: "06",
-      path: "#",
-      name: "SPACE INVADERS",
-      color: "#44aaaa",
-      available: false,
-    },
-    {
-      id: "07",
-      path: "#",
-      name: "FROGGER",
-      color: "#88aa44",
-      available: false,
-    },
-    {
-      id: "08",
-      path: "#",
-      name: "DIG DUG",
-      color: "#aa8844",
-      available: false,
-    },
-    { id: "09", path: "#", name: "GALAGA", color: "#4488aa", available: false },
-    {
-      id: "10",
-      path: "#",
-      name: "ASTEROIDS",
-      color: "#884488",
-      available: false,
+      route: "/games/pacman",
+      status: GameStatus.IN_DEVELOPMENT,
+      description:
+        "Космическая сингулярность. Поглощение светящейся материи в аномальной зоне.",
+      frostType: "boreal",
     },
   ];
 
-  let selectedIndex = $state(0);
-  let transitioning = $state(false);
-
-  const availableIndices = routes
-    .map((r, i) => (r.available ? i : -1))
-    .filter((i) => i >= 0);
-
-  function selectNext() {
-    if (availableIndices.length === 0) return;
-    const pos = availableIndices.indexOf(selectedIndex);
-    selectedIndex = availableIndices[(pos + 1) % availableIndices.length];
+  interface Snowflake {
+    id: number;
+    x: number;
+    y: number;
+    size: number;
+    speed: number;
+    opacity: number;
+    drift: number;
   }
 
-  function selectPrev() {
-    if (availableIndices.length === 0) return;
-    const pos = availableIndices.indexOf(selectedIndex);
-    selectedIndex =
-      availableIndices[
-        (pos - 1 + availableIndices.length) % availableIndices.length
-      ];
+  function generateSnowflakes(count: number): Snowflake[] {
+    return Array.from({ length: count }, (_, i) => ({
+      id: i,
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      size: 1.5 + Math.random() * 2.5,
+      speed: 20 + Math.random() * 30,
+      opacity: 0.1 + Math.random() * 0.25,
+      drift: -15 + Math.random() * 30,
+    }));
   }
 
-  function activate() {
-    const route = routes[selectedIndex];
-    if (route?.available && !transitioning) {
-      window.location.href = route.path;
-    }
-  }
-
-  function onKeydown(e: KeyboardEvent) {
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      selectNext();
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      selectPrev();
-    } else if (e.key === "Enter") {
-      e.preventDefault();
-      activate();
-    }
-  }
-
-  onMount(() => {
-    if (availableIndices.length > 0) selectedIndex = availableIndices[0];
-  });
+  const snowflakes = generateSnowflakes(35);
+  const stars = Array.from({ length: 40 }, (_, i) => ({
+    id: i,
+    x: Math.random() * 100,
+    y: Math.random() * 100,
+    size: 1.0 + Math.random() * 1.2,
+    opacity: 0.2 + Math.random() * 0.4,
+    delay: Math.random() * 5,
+  }));
 </script>
 
-<svelte:window onkeydown={onKeydown} />
+<div class="winter-noir">
+  <div class="sky-canvas">
+    <div class="aurora-glow"></div>
 
-<main class="void-library">
-  <div class="starfield"></div>
+    <div class="stars">
+      {#each stars as star (star.id)}
+        <div
+          class="star"
+          style:left="{star.x}%"
+          style:top="{star.y}%"
+          style:width="{star.size}px"
+          style:height="{star.size}px"
+          style:opacity={star.opacity}
+          style:animation-delay="{star.delay}s"
+        ></div>
+      {/each}
+    </div>
 
-  <header class="library-header">
-    <span class="archive-label">ARCHIVE</span>
-  </header>
-
-  <div class="transmissions">
-    {#each routes as route, i}
-      {@const isAvailable = route.available}
-      {@const isSelected = i === selectedIndex}
-
-      <button
-        class="transmission"
-        class:available={isAvailable}
-        class:locked={!isAvailable}
-        class:selected={isSelected}
-        style="--sig-color: {route.color};"
-        disabled={!isAvailable}
-        onclick={activate}
-        onmouseenter={() => {
-          if (isAvailable) selectedIndex = i;
-        }}
-        onfocus={() => {
-          if (isAvailable) selectedIndex = i;
-        }}
-        onkeydown={(e) => {
-          if (e.key === "Enter") activate();
-        }}
-        aria-label={`${route.name}${isAvailable ? "" : " — dormant"}`}
-      >
-        <span class="transmission-name">{route.name}</span>
-        {#if !isAvailable}
-          <span class="transmission-status">DORMANT</span>
-        {/if}
-        {#if isSelected && isAvailable}
-          <span class="focus-stars">
-            <span class="fstar f1"></span>
-            <span class="fstar f2"></span>
-            <span class="fstar f3"></span>
-            <span class="fstar f4"></span>
-          </span>
-        {/if}
-      </button>
-    {/each}
+    <div class="snowfall">
+      {#each snowflakes as flake (flake.id)}
+        <div
+          class="snowflake"
+          style:left="{flake.x}%"
+          style:top="-5%"
+          style:width="{flake.size}px"
+          style:height="{flake.size}px"
+          style:opacity={flake.opacity}
+          style:--speed="{flake.speed}s"
+          style:--drift="{flake.drift}px"
+          style:animation-delay="-{Math.random() * 25}s"
+        ></div>
+      {/each}
+    </div>
   </div>
-</main>
+
+  <main class="interface-layer">
+    <header class="luxury-header">
+      <div class="brand-monogram">✦ ARCHIVE SYSTEM ✦</div>
+      <h1 class="main-title">
+        <span class="light">NORTHERN</span>
+        <span class="bold">ARCADE</span>
+      </h1>
+      <p class="subtitle">выберите активную проекцию для симуляции</p>
+    </header>
+
+    <div class="cards-viewport">
+      {#each games as game (game.name)}
+        <GameCard
+          name={game.name}
+          route={game.route}
+          status={game.status}
+          description={game.description}
+          frostType={game.frostType}
+        />
+      {/each}
+    </div>
+
+    <footer class="minimal-footer">
+      <span class="build-ver">SYS.NIGHT.v0.1.0</span>
+      <div class="footer-line"></div>
+      <span class="copyright">© 2026 TERMINAL</span>
+    </footer>
+  </main>
+</div>
 
 <style lang="scss">
-  $void: #040410;
-  $violet: #6655aa;
-  $violet-dim: rgba(120, 100, 180, 0.45);
-  $white: #eeeedd;
-  $white-dim: #8888aa;
+  $bg-absolute: #030508;
+  $bg-sky-top: #06090e;
+  $bg-sky-bottom: #0a0f18;
+
+  $text-pure: #ffffff;
+  $text-silver: #f8fafc;
+  $text-dark-ice: #94a3b8;
+  $text-muted: #475569;
+
+  $font-premium: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    sans-serif;
 
   :global(body) {
+    background-color: $bg-absolute;
     margin: 0;
-    background: $void;
-    overflow: hidden;
+    padding: 0;
+    overflow-x: hidden;
   }
 
-  .void-library {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+  .winter-noir {
+    position: relative;
     min-height: 100vh;
     width: 100vw;
-    background: radial-gradient(ellipse at center, #0c0c24 0%, $void 55%);
-    font-family: "Jersey-Regular", "Courier New", monospace;
-    position: relative;
-    overflow: hidden;
-  }
-
-  // ── Starfield ───────────────────────────────────────────
-  .starfield {
-    position: absolute;
-    inset: 0;
-    background-image: radial-gradient(
-        1px 1px at 8% 12%,
-        rgba(150, 120, 220, 0.5),
-        transparent
-      ),
-      radial-gradient(1px 1px at 18% 50%, rgba(150, 120, 220, 0.3), transparent),
-      radial-gradient(
-        1.2px 1.2px at 30% 8%,
-        rgba(180, 150, 240, 0.55),
-        transparent
-      ),
-      radial-gradient(
-        1px 1px at 44% 60%,
-        rgba(150, 120, 220, 0.35),
-        transparent
-      ),
-      radial-gradient(
-        1.5px 1.5px at 55% 18%,
-        rgba(200, 170, 255, 0.5),
-        transparent
-      ),
-      radial-gradient(1px 1px at 62% 72%, rgba(150, 120, 220, 0.3), transparent),
-      radial-gradient(1px 1px at 72% 38%, rgba(150, 120, 220, 0.4), transparent),
-      radial-gradient(
-        1.3px 1.3px at 82% 10%,
-        rgba(180, 150, 240, 0.5),
-        transparent
-      ),
-      radial-gradient(1px 1px at 90% 55%, rgba(150, 120, 220, 0.3), transparent),
-      radial-gradient(1px 1px at 4% 78%, rgba(150, 120, 220, 0.35), transparent),
-      radial-gradient(
-        1.2px 1.2px at 25% 32%,
-        rgba(180, 150, 240, 0.45),
-        transparent
-      ),
-      radial-gradient(1px 1px at 40% 80%, rgba(150, 120, 220, 0.3), transparent),
-      radial-gradient(
-        1.4px 1.4px at 52% 45%,
-        rgba(200, 170, 255, 0.4),
-        transparent
-      ),
-      radial-gradient(1px 1px at 68% 6%, rgba(150, 120, 220, 0.45), transparent),
-      radial-gradient(1px 1px at 85% 68%, rgba(150, 120, 220, 0.3), transparent);
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  // ── Header ──────────────────────────────────────────────
-  .library-header {
-    position: relative;
-    z-index: 1;
-    padding: 3.5rem 1rem 3rem;
-  }
-
-  .archive-label {
-    font-size: 0.65rem;
-    color: rgba($violet, 0.35);
-    letter-spacing: 8px;
-    text-transform: uppercase;
-  }
-
-  // ── Transmissions ───────────────────────────────────────
-  .transmissions {
-    position: relative;
-    z-index: 1;
+    font-family: $font-premium;
+    color: $text-pure;
     display: flex;
     flex-direction: column;
+    justify-content: flex-start;
     align-items: center;
-    gap: 2.2rem;
-    padding: 1rem 2rem 6rem;
-    width: 100%;
-    max-width: 500px;
-    overflow-y: auto;
-    flex: 1;
-
-    &::-webkit-scrollbar {
-      width: 3px;
-    }
-    &::-webkit-scrollbar-track {
-      background: transparent;
-    }
-    &::-webkit-scrollbar-thumb {
-      background: rgba($violet, 0.15);
-      border-radius: 2px;
-    }
   }
 
-  .transmission {
-    background: none;
-    border: none;
-    cursor: default;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.3rem;
-    padding: 1rem 1.5rem;
-    position: relative;
-    font-family: inherit;
-    width: 100%;
-    transition: transform 0.3s ease;
-    outline-offset: 4px;
-
-    &.available {
-      cursor: pointer;
-
-      &:hover .transmission-name,
-      &:focus-visible .transmission-name {
-        color: $white;
-        text-shadow:
-          0 0 12px var(--sig-color),
-          0 0 30px var(--sig-color),
-          0 0 50px rgba(0, 0, 0, 0);
-        letter-spacing: 10px;
-        transition:
-          letter-spacing 0.3s ease,
-          text-shadow 0.3s ease;
-      }
-
-      &:hover,
-      &:focus-visible {
-        transform: scale(1.06);
-      }
-
-      &:hover .focus-stars .fstar,
-      &:focus-visible .focus-stars .fstar {
-        opacity: 1;
-        animation-duration: 0.8s;
-      }
-    }
-
-    &.selected {
-      transform: scale(1.08);
-    }
-
-    &.available:focus-visible {
-      box-shadow: 0 0 0 2px $violet-dim;
-      border-radius: 3px;
-    }
-  }
-
-  .transmission-name {
-    font-size: 2rem;
-    letter-spacing: 6px;
-    color: #1a1a2e;
-    transition:
-      color 0.4s ease,
-      text-shadow 0.4s ease,
-      letter-spacing 0.3s ease;
-  }
-
-  .available .transmission-name {
-    color: $white-dim;
-  }
-
-  .selected.available .transmission-name {
-    color: $white;
-    text-shadow:
-      0 0 18px var(--sig-color),
-      0 0 40px var(--sig-color);
-  }
-
-  .locked .transmission-name {
-    color: #141428;
-  }
-
-  .transmission-status {
-    font-size: 0.55rem;
-    letter-spacing: 4px;
-    color: #1a1a2e;
-  }
-
-  // ── Focus stars ─────────────────────────────────────────
-  .focus-stars {
-    position: absolute;
+  .sky-canvas {
+    position: fixed;
     inset: 0;
+    background: linear-gradient(to bottom, $bg-sky-top, $bg-sky-bottom);
+    z-index: 1;
     pointer-events: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+
+    .aurora-glow {
+      position: absolute;
+      top: 0;
+      left: 20%;
+      width: 60%;
+      height: 50%;
+      background: radial-gradient(
+        ellipse at top,
+        rgba(14, 116, 144, 0.15) 0%,
+        rgba(15, 23, 42, 0) 80%
+      );
+      filter: blur(50px);
+    }
   }
 
-  .fstar {
+  .star {
     position: absolute;
-    width: 2px;
-    height: 2px;
-    background: $white;
     border-radius: 50%;
-    box-shadow: 0 0 6px var(--sig-color);
-    opacity: 0.3;
-    animation: star-twinkle 1.5s ease-in-out infinite;
+    background: #ffffff;
+    animation: pulseStar 6s ease-in-out infinite alternate;
   }
 
-  .f1 {
-    top: 8%;
-    left: 12%;
-    animation-delay: 0s;
-  }
-  .f2 {
-    top: 10%;
-    right: 15%;
-    animation-delay: 0.4s;
-  }
-  .f3 {
-    bottom: 10%;
-    left: 20%;
-    animation-delay: 0.8s;
-  }
-  .f4 {
-    bottom: 12%;
-    right: 15%;
-    animation-delay: 1.2s;
-  }
-
-  @keyframes star-twinkle {
-    0%,
-    100% {
+  @keyframes pulseStar {
+    0% {
       opacity: 0.2;
-      transform: scale(1);
     }
-    50% {
-      opacity: 1;
-      transform: scale(1.8);
+    100% {
+      opacity: 0.6;
+    }
+  }
+
+  .snowfall {
+    position: absolute;
+    inset: 0;
+  }
+
+  .snowflake {
+    position: absolute;
+    background: #ffffff;
+    border-radius: 50%;
+    animation: linearFall var(--speed) linear infinite;
+  }
+
+  @keyframes linearFall {
+    0% {
+      transform: translateY(0) translateX(0);
+    }
+    100% {
+      transform: translateY(105vh) translateX(var(--drift));
+    }
+  }
+
+  .interface-layer {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    max-width: 1200px;
+    padding: 90px 40px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 70px;
+  }
+
+  .luxury-header {
+    text-align: center;
+
+    .brand-monogram {
+      font-size: 11px;
+      font-weight: 600;
+      color: $text-dark-ice;
+      letter-spacing: 4px;
+      margin-bottom: 20px;
+    }
+
+    .main-title {
+      margin: 0;
+      font-size: 3rem;
+      letter-spacing: 20px;
+      text-indent: 20px;
+      line-height: 1.1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+
+      .light {
+        font-weight: 300;
+        color: rgba($text-pure, 0.9);
+      }
+      .bold {
+        font-weight: 800;
+        margin-top: 6px;
+        background: linear-gradient(to bottom, #ffffff, #cbd5e1);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+    }
+
+    .subtitle {
+      margin: 28px 0 0 0;
+      font-size: 0.8rem;
+      font-weight: 500;
+      letter-spacing: 5px;
+      text-indent: 5px;
+      color: $text-dark-ice;
+      text-transform: uppercase;
+    }
+  }
+
+  .cards-viewport {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 28px;
+    width: 100%;
+  }
+
+  .minimal-footer {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.7rem;
+    letter-spacing: 3px;
+    color: $text-muted;
+    margin-top: 20px;
+
+    .footer-line {
+      flex-grow: 1;
+      height: 1px;
+      background: rgba(255, 255, 255, 0.06);
+      margin: 0 40px;
+    }
+  }
+
+  @media (max-width: 1100px) {
+    .cards-viewport {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 640px) {
+    .interface-layer {
+      padding: 60px 24px;
+      gap: 50px;
+    }
+    .main-title {
+      font-size: 2rem;
+    }
+    .cards-viewport {
+      grid-template-columns: 1fr;
+      max-width: 340px;
+    }
+    .minimal-footer {
+      flex-direction: column;
+      gap: 16px;
+      .footer-line {
+        display: none;
+      }
     }
   }
 </style>
